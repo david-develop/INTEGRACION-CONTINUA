@@ -1,0 +1,10 @@
+# Dependencias y artefactos de pruebas
+/vendor/
+/build/
+composer.lock
+.phpunit.result.cache
+
+# IDE
+.idea/
+
+ngroc-key

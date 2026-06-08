@@ -1,5 +1,10 @@
 version: '3.8'
 
+# Nombre de proyecto FIJO. Sin esto, Compose usa el nombre de la carpeta:
+# en tu maquina seria "integracion-continua" pero en Jenkins seria el nombre
+# del workspace, creando una red distinta donde "web" no resuelve a "db".
+name: integracion-continua
+
 services:
 
   web:
@@ -10,6 +15,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - ganandez-net
 
@@ -25,7 +36,7 @@ services:
       - db_data:/var/lib/mysql
       - ./sql/IT.sql:/docker-entrypoint-initdb.d/IT.sql
     healthcheck:
-      test: ["CMD","mysqladmin","ping","-h","localhost","-u","root","-proot_password"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,13 +44,26 @@ services:
       - ganandez-net
 
   jenkins:
-    image: jenkins/jenkins:lts
+    # Imagen propia (Dockerfile.jenkins) con el cliente Docker ya instalado,
+    # para que el pipeline pueda construir/desplegar usando el socket del host.
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
     container_name: ganandez_jenkins
+    # Se ejecuta como root para poder usar el socket de Docker montado.
+    user: root
     ports:
       - "8081:8080"
       - "50000:50000"
     volumes:
       - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - ganandez-net
 

@@ -1,0 +1,18 @@
+# Control de versiones
+.git
+.gitignore
+
+# CI / herramientas
+Jenkinsfile
+.dockerignore
+.idea
+
+# Dependencias y artefactos de pruebas (se instalan/generan en CI, no en la imagen)
+vendor
+build
+tests
+phpunit.xml
+composer.lock
+
+# Documentacion
+README.md
